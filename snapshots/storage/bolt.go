@@ -202,6 +202,14 @@ func GetSnapshot(ctx context.Context, key string) (s Snapshot, err error) {
 				return fmt.Errorf("failed to get parent chain: %w", err)
 			}
 		}
+
+		var labels map[string]string
+		labels, err = boltutil.ReadLabels(sbkt)
+		if err != nil {
+			return err
+		}
+
+		s.Labels = labels
 		return nil
 	})
 	if err != nil {
@@ -281,6 +289,7 @@ func CreateSnapshot(ctx context.Context, kind snapshots.Kind, key, parent string
 
 		s.ID = fmt.Sprintf("%d", id)
 		s.Kind = kind
+		s.Labels = si.Labels
 		return nil
 	})
 	if err != nil {

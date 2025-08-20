@@ -19,6 +19,7 @@ package server
 import (
 	"errors"
 	"fmt"
+	"maps"
 	"path/filepath"
 	goruntime "runtime"
 	"time"
@@ -184,7 +185,20 @@ func (c *criService) CreateContainer(ctx context.Context, r *runtime.CreateConta
 
 	log.G(ctx).Debugf("Container %q spec: %#+v", id, spew.NewFormatter(spec))
 
-	snapshotterOpt := snapshots.WithLabels(snapshots.FilterInheritedLabels(config.Annotations))
+	mergeLabels := func(labels, annos map[string]string) map[string]string {
+		if labels == nil {
+			return annos
+		}
+
+		result := make(map[string]string, len(labels)+len(annos))
+		maps.Copy(result, labels)
+		maps.Copy(result, annos)
+		return result
+	}
+
+	//log.G(ctx).Debugf("Container %q labels: %v", id, labels)
+	//snapshotterOpt := snapshots.WithLabels(labels)
+	snapshotterOpt := snapshots.WithLabels(snapshots.FilterInheritedLabels(mergeLabels(r.Config.Labels, config.Annotations)))
 	// Set snapshotter before any other options.
 	opts := []containerd.NewContainerOpts{
 		containerd.WithSnapshotter(c.config.ContainerdConfig.Snapshotter),

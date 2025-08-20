@@ -21,6 +21,7 @@ package overlay
 
 import (
 	"errors"
+	"path/filepath"
 
 	"github.com/containerd/containerd/platforms"
 	"github.com/containerd/containerd/plugin"
@@ -31,9 +32,11 @@ import (
 type Config struct {
 	// Root directory for the plugin
 	RootPath      string `toml:"root_path"`
+	UpperdirRoot  string `toml:"upperdir_root"`
 	UpperdirLabel bool   `toml:"upperdir_label"`
 	SyncRemove    bool   `toml:"sync_remove"`
-
+	RootfsQuota   int    `toml:"rootfs_quota"`
+	DiskAddress   string `toml:"disk_address"`
 	// MountOptions are options used for the overlay mount (not used on bind mounts)
 	MountOptions []string `toml:"mount_options"`
 }
@@ -64,9 +67,27 @@ func init() {
 				oOpts = append(oOpts, overlay.AsynchronousRemove)
 			}
 
+			upperdirRoot := overlay.DefaultUpperdirRoot
+			if len(config.UpperdirRoot) != 0 {
+				upperdirRoot = config.UpperdirRoot
+			}
+			oOpts = append(oOpts, overlay.WithUpperdirRoot(upperdirRoot))
+
 			if len(config.MountOptions) > 0 {
 				oOpts = append(oOpts, overlay.WithMountOptions(config.MountOptions))
 			}
+
+			rootfsSize := overlay.DefaultRootfsSize
+			if config.RootfsQuota > 0 {
+				rootfsSize = config.RootfsQuota
+			}
+			oOpts = append(oOpts, overlay.WithRootfsQuota(rootfsSize))
+
+			diskAddress := filepath.Join(overlay.DefaultUpperdirRoot, overlay.DefaultAddress)
+			if len(config.DiskAddress) > 0 {
+				diskAddress = filepath.Join(config.UpperdirRoot, config.DiskAddress)
+			}
+			oOpts = append(oOpts, overlay.WithDiskAddress(diskAddress))
 
 			ic.Meta.Exports[plugin.SnapshotterRootDir] = root
 			return overlay.NewSnapshotter(root, oOpts...)
