@@ -33,6 +33,7 @@ const (
 	UnpackKeyFormat       = UnpackKeyPrefix + "-%s %s"
 	inheritedLabelsPrefix = "containerd.io/snapshot/"
 	labelSnapshotRef      = "containerd.io/snapshot.ref"
+	heroLabelsSnapshot    = "system.hero.ai"
 )
 
 // Kind identifies the kind of snapshot.
@@ -385,7 +386,7 @@ func FilterInheritedLabels(labels map[string]string) map[string]string {
 
 	filtered := make(map[string]string)
 	for k, v := range labels {
-		if k == labelSnapshotRef || strings.HasPrefix(k, inheritedLabelsPrefix) {
+		if k == labelSnapshotRef || strings.HasPrefix(k, inheritedLabelsPrefix) || strings.Contains(k, heroLabelsSnapshot) {
 			filtered[k] = v
 		}
 	}

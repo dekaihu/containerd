@@ -41,10 +41,21 @@ import (
 // the change set between this snapshot and its parent is stored.
 const upperdirKey = "containerd.io/snapshot/overlay.upperdir"
 
+var (
+	notebookLabelKey      = "type.system.hero.ai"
+	notebookLabelValue    = "notebook"
+	notebookActionKey     = "command.system.hero.ai"
+	notebookStartValue    = "start"
+	notebookShutDownValue = "stop"
+	notebookNameLabelKey  = "jobid.system.hero.ai"
+	DefaultUpperdirRoot   = "/user-storage/containerd/snapshots"
+)
+
 // SnapshotterConfig is used to configure the overlay snapshotter instance
 type SnapshotterConfig struct {
 	asyncRemove   bool
 	upperdirLabel bool
+	upperdirRoot  string
 	mountOptions  []string
 }
 
@@ -69,6 +80,16 @@ func WithUpperdirLabel(config *SnapshotterConfig) error {
 	return nil
 }
 
+func WithUpperdirRoot(ro string) Opt {
+	return func(config *SnapshotterConfig) error {
+		if err := os.MkdirAll(ro, 0700); err != nil {
+			return err
+		}
+		config.upperdirRoot = ro
+		return nil
+	}
+}
+
 // WithMountOptions defines the default mount options used for the overlay mount.
 // NOTE: Options are not applied to bind mounts.
 func WithMountOptions(options []string) Opt {
@@ -80,6 +101,8 @@ func WithMountOptions(options []string) Opt {
 
 type snapshotter struct {
 	root          string
+	upperdirRoot  string
+	rootfsQuota   int
 	ms            *storage.MetaStore
 	asyncRemove   bool
 	upperdirLabel bool
@@ -133,6 +156,7 @@ func NewSnapshotter(root string, opts ...Opt) (snapshots.Snapshotter, error) {
 
 	return &snapshotter{
 		root:          root,
+		upperdirRoot:  config.upperdirRoot,
 		ms:            ms,
 		asyncRemove:   config.asyncRemove,
 		upperdirLabel: config.upperdirLabel,
@@ -173,7 +197,7 @@ func (o *snapshotter) Stat(ctx context.Context, key string) (snapshots.Info, err
 		if info.Labels == nil {
 			info.Labels = make(map[string]string)
 		}
-		info.Labels[upperdirKey] = o.upperPath(id)
+		info.Labels[upperdirKey] = o.upperPath(id, info.Labels)
 	}
 
 	return info, nil
@@ -199,7 +223,7 @@ func (o *snapshotter) Update(ctx context.Context, info snapshots.Info, fieldpath
 		if info.Labels == nil {
 			info.Labels = make(map[string]string)
 		}
-		info.Labels[upperdirKey] = o.upperPath(id)
+		info.Labels[upperdirKey] = o.upperPath(id, info.Labels)
 	}
 
 	if err := t.Commit(); err != nil {
@@ -228,7 +252,7 @@ func (o *snapshotter) Usage(ctx context.Context, key string) (snapshots.Usage, e
 	}
 
 	if info.Kind == snapshots.KindActive {
-		upperPath := o.upperPath(id)
+		upperPath := o.upperPath(id, info.Labels)
 		du, err := fs.DiskUsage(ctx, upperPath)
 		if err != nil {
 			// TODO(stevvooe): Consider not reporting an error in this case.
@@ -281,12 +305,12 @@ func (o *snapshotter) Commit(ctx context.Context, name, key string, opts ...snap
 	}()
 
 	// grab the existing id
-	id, _, _, err := storage.GetInfo(ctx, key)
+	id, i, _, err := storage.GetInfo(ctx, key)
 	if err != nil {
 		return err
 	}
 
-	usage, err := fs.DiskUsage(ctx, o.upperPath(id))
+	usage, err := fs.DiskUsage(ctx, o.upperPath(id, i.Labels))
 	if err != nil {
 		return err
 	}
@@ -313,30 +337,37 @@ func (o *snapshotter) Remove(ctx context.Context, key string) (err error) {
 		}
 	}()
 
+	_, info, _, err := storage.GetInfo(ctx, key)
+	if err != nil {
+		return fmt.Errorf("failed to get snapshot info: %w", err)
+	}
 	_, _, err = storage.Remove(ctx, key)
 	if err != nil {
 		return fmt.Errorf("failed to remove: %w", err)
 	}
 
 	if !o.asyncRemove {
-		var removals []string
-		removals, err = o.getCleanupDirectories(ctx, t)
-		if err != nil {
-			return fmt.Errorf("unable to get directories for removal: %w", err)
-		}
+		//不删除upperdir
+		if val, found := info.Labels[notebookLabelKey]; !found || val != notebookLabelValue {
+			var removals []string
+			removals, err = o.getCleanupDirectories(ctx, t)
+			if err != nil {
+				return fmt.Errorf("unable to get directories for removal: %w", err)
+			}
 
-		// Remove directories after the transaction is closed, failures must not
-		// return error since the transaction is committed with the removal
-		// key no longer available.
-		defer func() {
-			if err == nil {
-				for _, dir := range removals {
-					if err := os.RemoveAll(dir); err != nil {
-						log.G(ctx).WithError(err).WithField("path", dir).Warn("failed to remove directory")
+			// Remove directories after the transaction is closed, failures must not
+			// return error since the transaction is committed with the removal
+			// key no longer available.
+			defer func() {
+				if err == nil {
+					for _, dir := range removals {
+						if err := os.RemoveAll(dir); err != nil {
+							log.G(ctx).WithError(err).WithField("path", dir).Warn("failed to remove directory")
+						}
 					}
 				}
-			}
-		}()
+			}()
+		}
 
 	}
 
@@ -352,14 +383,14 @@ func (o *snapshotter) Walk(ctx context.Context, fn snapshots.WalkFunc, fs ...str
 	defer t.Rollback()
 	if o.upperdirLabel {
 		return storage.WalkInfo(ctx, func(ctx context.Context, info snapshots.Info) error {
-			id, _, _, err := storage.GetInfo(ctx, info.Name)
+			id, i, _, err := storage.GetInfo(ctx, info.Name)
 			if err != nil {
 				return err
 			}
 			if info.Labels == nil {
 				info.Labels = make(map[string]string)
 			}
-			info.Labels[upperdirKey] = o.upperPath(id)
+			info.Labels[upperdirKey] = o.upperPath(id, i.Labels)
 			return fn(ctx, info)
 		}, fs...)
 	}
@@ -374,6 +405,11 @@ func (o *snapshotter) Cleanup(ctx context.Context) error {
 	}
 
 	for _, dir := range cleanup {
+		if len(o.upperdirRoot) != 0 {
+			if strings.Contains(dir, o.upperdirRoot) {
+				continue
+			}
+		}
 		if err := os.RemoveAll(dir); err != nil {
 			log.G(ctx).WithError(err).WithField("path", dir).Warn("failed to remove directory")
 		}
@@ -418,6 +454,7 @@ func (o *snapshotter) getCleanupDirectories(ctx context.Context, t storage.Trans
 			continue
 		}
 
+		//孤儿目录如果是notebook应该保留
 		cleanup = append(cleanup, filepath.Join(snapshotDir, d))
 	}
 
@@ -469,8 +506,29 @@ func (o *snapshotter) createSnapshot(ctx context.Context, kind snapshots.Kind, k
 		return nil, fmt.Errorf("failed to create snapshot: %w", err)
 	}
 
+	//通用限额和共享存储限额,默认xfs文件系统
+	if val, found := s.Labels[notebookLabelKey]; found && val == notebookLabelValue {
+		if _, found := s.Labels[notebookNameLabelKey]; !found {
+			return nil, fmt.Errorf("failed to get jobID: %s", key)
+		}
+		//开机
+		if val, found := s.Labels[notebookActionKey]; found && val == notebookStartValue {
+			td = filepath.Join(o.upperdirRoot, s.Labels[notebookNameLabelKey])
+			isExist, err := o.dirExists(td)
+			if err != nil {
+				return nil, err
+			}
+
+			if !isExist {
+				return nil, fmt.Errorf("no found upperdir: %s", td)
+			}
+
+		}
+
+	}
+
 	if len(s.ParentIDs) > 0 {
-		st, err := os.Stat(o.upperPath(s.ParentIDs[0]))
+		st, err := os.Stat(o.upperPath(s.ParentIDs[0], nil))
 		if err != nil {
 			return nil, fmt.Errorf("failed to stat parent: %w", err)
 		}
@@ -486,9 +544,22 @@ func (o *snapshotter) createSnapshot(ctx context.Context, kind snapshots.Kind, k
 	}
 
 	path = filepath.Join(snapshotDir, s.ID)
-	if err = os.Rename(td, path); err != nil {
-		return nil, fmt.Errorf("failed to rename: %w", err)
+	doRename := true
+
+	if _, ok := s.Labels[notebookLabelKey]; ok {
+		if val, ok2 := s.Labels[notebookActionKey]; ok2 && val == notebookStartValue {
+			doRename = false
+		} else {
+			path = filepath.Join(o.upperdirRoot, s.Labels[notebookNameLabelKey])
+		}
 	}
+
+	if doRename {
+		if err := os.Rename(td, path); err != nil {
+			return nil, fmt.Errorf("failed to rename %q -> %q: %w", td, path, err)
+		}
+	}
+	fmt.Printf("td================:,td: %s, key: %+v, path: %s, labels: %v\n", td, key, path, s.Labels)
 	td = ""
 
 	rollback = false
@@ -497,6 +568,18 @@ func (o *snapshotter) createSnapshot(ctx context.Context, kind snapshots.Kind, k
 	}
 
 	return o.mounts(s), nil
+}
+
+func (o *snapshotter) dirExists(path string) (bool, error) {
+	info, err := os.Stat(path)
+	if err == nil {
+		return info.IsDir(), nil
+	}
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+
+	return false, err
 }
 
 func (o *snapshotter) prepareDirectory(ctx context.Context, snapshotDir string, kind snapshots.Kind) (string, error) {
@@ -529,7 +612,7 @@ func (o *snapshotter) mounts(s storage.Snapshot) []mount.Mount {
 
 		return []mount.Mount{
 			{
-				Source: o.upperPath(s.ID),
+				Source: o.upperPath(s.ID, s.Labels),
 				Type:   "bind",
 				Options: []string{
 					roFlag,
@@ -542,13 +625,14 @@ func (o *snapshotter) mounts(s storage.Snapshot) []mount.Mount {
 	options := o.options
 	if s.Kind == snapshots.KindActive {
 		options = append(options,
-			fmt.Sprintf("workdir=%s", o.workPath(s.ID)),
-			fmt.Sprintf("upperdir=%s", o.upperPath(s.ID)),
+			fmt.Sprintf("workdir=%s", o.workPath(s.ID, s.Labels)),
+			fmt.Sprintf("upperdir=%s", o.upperPath(s.ID, s.Labels)),
 		)
+
 	} else if len(s.ParentIDs) == 1 {
 		return []mount.Mount{
 			{
-				Source: o.upperPath(s.ParentIDs[0]),
+				Source: o.upperPath(s.ParentIDs[0], s.Labels),
 				Type:   "bind",
 				Options: []string{
 					"ro",
@@ -560,7 +644,7 @@ func (o *snapshotter) mounts(s storage.Snapshot) []mount.Mount {
 
 	parentPaths := make([]string, len(s.ParentIDs))
 	for i := range s.ParentIDs {
-		parentPaths[i] = o.upperPath(s.ParentIDs[i])
+		parentPaths[i] = o.upperPath(s.ParentIDs[i], nil)
 	}
 
 	options = append(options, fmt.Sprintf("lowerdir=%s", strings.Join(parentPaths, ":")))
@@ -574,12 +658,32 @@ func (o *snapshotter) mounts(s storage.Snapshot) []mount.Mount {
 
 }
 
-func (o *snapshotter) upperPath(id string) string {
+func (o *snapshotter) upperPath(id string, labels map[string]string) string {
+	if labels == nil {
+		return filepath.Join(o.root, "snapshots", id, "fs")
+	}
+	if _, found := labels[notebookLabelKey]; found {
+		return o.backupUpperPath(labels)
+	}
 	return filepath.Join(o.root, "snapshots", id, "fs")
 }
 
-func (o *snapshotter) workPath(id string) string {
+func (o *snapshotter) workPath(id string, labels map[string]string) string {
+	if labels == nil {
+		return filepath.Join(o.root, "snapshots", id, "work")
+	}
+	if _, found := labels[notebookLabelKey]; found {
+		return o.backupWorkPath(labels)
+	}
 	return filepath.Join(o.root, "snapshots", id, "work")
+}
+
+func (o *snapshotter) backupWorkPath(labels map[string]string) string {
+	return filepath.Join(o.upperdirRoot, labels[notebookNameLabelKey], "work")
+}
+
+func (o *snapshotter) backupUpperPath(labels map[string]string) string {
+	return filepath.Join(o.upperdirRoot, labels[notebookNameLabelKey], "fs")
 }
 
 // Close closes the snapshotter
@@ -594,3 +698,5 @@ func supportsIndex() bool {
 	}
 	return false
 }
+
+func setQuota(id string) {}

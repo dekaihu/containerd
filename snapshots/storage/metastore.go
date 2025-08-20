@@ -54,6 +54,7 @@ type Snapshot struct {
 	Kind      snapshots.Kind
 	ID        string
 	ParentIDs []string
+	Labels    map[string]string
 }
 
 // MetaStore is used to store metadata related to a snapshot driver. The

@@ -20,9 +20,13 @@
 package overlayutils
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 	"syscall"
 
 	kernel "github.com/containerd/containerd/contrib/seccomp/kernelversion"
@@ -198,4 +202,29 @@ func NeedsUserXAttr(d string) (bool, error) {
 		log.L.WithError(err).Warnf("Failed to unmount check directory %v", dest)
 	}
 	return true, nil
+}
+
+func ExecuteShell(cmdStr string) (outStr string, err error) {
+	cmd := exec.Command("/bin/sh", "-c", cmdStr)
+	var outBuf, errBuf bytes.Buffer
+
+	cmd.Stdout = &outBuf
+	cmd.Stderr = &errBuf
+	err = cmd.Start()
+	if err != nil {
+		return
+	}
+
+	cmd.Wait()
+
+	outStr = outBuf.String()
+	errStr := errBuf.String()
+
+	if len(errStr) > 0 {
+		if strings.Contains(errStr, "Warning") || strings.Contains(errStr, "warning") {
+			return
+		}
+		err = errors.New(errStr)
+	}
+	return
 }

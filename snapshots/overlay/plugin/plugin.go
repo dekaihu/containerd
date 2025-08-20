@@ -31,8 +31,10 @@ import (
 type Config struct {
 	// Root directory for the plugin
 	RootPath      string `toml:"root_path"`
+	UpperdirRoot  string `toml:"upperdir_root"`
 	UpperdirLabel bool   `toml:"upperdir_label"`
 	SyncRemove    bool   `toml:"sync_remove"`
+	RootfsQuota   int    `toml:"rootfs_quota"`
 
 	// MountOptions are options used for the overlay mount (not used on bind mounts)
 	MountOptions []string `toml:"mount_options"`
@@ -63,6 +65,12 @@ func init() {
 			if !config.SyncRemove {
 				oOpts = append(oOpts, overlay.AsynchronousRemove)
 			}
+
+			upperdirRoot := overlay.DefaultUpperdirRoot
+			if len(config.UpperdirRoot) != 0 {
+				upperdirRoot = config.UpperdirRoot
+			}
+			oOpts = append(oOpts, overlay.WithUpperdirRoot(upperdirRoot))
 
 			if len(config.MountOptions) > 0 {
 				oOpts = append(oOpts, overlay.WithMountOptions(config.MountOptions))
