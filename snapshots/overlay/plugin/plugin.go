@@ -21,23 +21,65 @@ package overlay
 
 import (
 	"errors"
+	"fmt"
+	"sync"
 
 	"github.com/containerd/containerd/platforms"
 	"github.com/containerd/containerd/plugin"
 	"github.com/containerd/containerd/snapshots/overlay"
+	"github.com/containerd/containerd/snapshots/overlay/quota"
 )
 
 // Config represents configuration for the overlay plugin.
 type Config struct {
 	// Root directory for the plugin
-	RootPath      string `toml:"root_path"`
-	UpperdirRoot  string `toml:"upperdir_root"`
-	UpperdirLabel bool   `toml:"upperdir_label"`
-	SyncRemove    bool   `toml:"sync_remove"`
-	RootfsQuota   int    `toml:"rootfs_quota"`
+	RootPath          string `toml:"root_path"`
+	UpperdirRoot      string `toml:"upperdir_root"`
+	UpperdirLabel     bool   `toml:"upperdir_label"`
+	SyncRemove        bool   `toml:"sync_remove"`
+	RootfsQuota       int    `toml:"rootfs_quota"`
+	RootfsStorageType string `toml:"rootfs_quota_type"`
 
 	// MountOptions are options used for the overlay mount (not used on bind mounts)
 	MountOptions []string `toml:"mount_options"`
+}
+
+var InitQuotaFn map[string]quota.RootfsQuota
+var pluginMutex sync.Mutex
+
+type PluginBuilder func(root string) (quota.RootfsQuota, error)
+
+var quotaBuilders = map[string]PluginBuilder{}
+
+func RegisterQuotaPlugin(name string, pc PluginBuilder) {
+	pluginMutex.Lock()
+	defer pluginMutex.Unlock()
+	quotaBuilders[name] = pc
+}
+
+var quotaInstances = map[string]quota.RootfsQuota{}
+
+func createQuota(root, upperdirRoot string) error {
+	pluginMutex.Lock()
+	defer pluginMutex.Unlock()
+
+	for name, pc := range quotaBuilders {
+		var ro string
+		switch name {
+		case "xfs":
+			ro = root
+		default:
+			ro = upperdirRoot
+		}
+		instance, err := pc(ro)
+		if err != nil {
+			return fmt.Errorf("rootfsquota %s not support quota, path: %s ", name, ro)
+		}
+
+		InitQuotaFn[name] = instance
+	}
+
+	return nil
 }
 
 func init() {
@@ -75,6 +117,24 @@ func init() {
 			if len(config.MountOptions) > 0 {
 				oOpts = append(oOpts, overlay.WithMountOptions(config.MountOptions))
 			}
+
+			//xfs -----> root     other ------> upperdir
+			if quotaBuilders != nil {
+				createQuota(root, upperdirRoot)
+				oOpts = append(oOpts, overlay.WithQuotas(InitQuotaFn))
+			}
+
+			quotaSize := overlay.DefaultQuotaSize
+			if config.RootfsQuota > 0 {
+				quotaSize = config.RootfsQuota
+			}
+			oOpts = append(oOpts, overlay.WithRootfsQuota(quotaSize))
+
+			quotaType := overlay.DefaultNotebookQuotaType
+			if len(config.RootfsStorageType) > 0 {
+				quotaType = config.RootfsStorageType
+			}
+			oOpts = append(oOpts, overlay.WithUpperdirQuotaType(quotaType))
 
 			ic.Meta.Exports[plugin.SnapshotterRootDir] = root
 			return overlay.NewSnapshotter(root, oOpts...)

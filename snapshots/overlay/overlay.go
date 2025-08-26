@@ -30,6 +30,7 @@ import (
 	"github.com/containerd/containerd/mount"
 	"github.com/containerd/containerd/snapshots"
 	"github.com/containerd/containerd/snapshots/overlay/overlayutils"
+	"github.com/containerd/containerd/snapshots/overlay/quota"
 	"github.com/containerd/containerd/snapshots/storage"
 	"github.com/containerd/continuity/fs"
 	"github.com/containerd/log"
@@ -42,21 +43,26 @@ import (
 const upperdirKey = "containerd.io/snapshot/overlay.upperdir"
 
 var (
-	notebookLabelKey      = "type.system.hero.ai"
-	notebookLabelValue    = "notebook"
-	notebookActionKey     = "command.system.hero.ai"
-	notebookStartValue    = "start"
-	notebookShutDownValue = "stop"
-	notebookNameLabelKey  = "jobid.system.hero.ai"
-	DefaultUpperdirRoot   = "/user-storage/containerd/snapshots"
+	quotaLabelKey            = "rootfsquota.system.hero.ai"
+	notebookLabelKey         = "type.system.hero.ai"
+	notebookLabelValue       = "notebook"
+	notebookActionKey        = "command.system.hero.ai"
+	notebookStartValue       = "start"
+	notebookNameLabelKey     = "jobid.system.hero.ai"
+	DefaultNotebookQuotaType = "xfs"
+	DefaultUpperdirRoot      = "/user-storage/containerd/snapshots"
+	DefaultQuotaSize         = 30
 )
 
 // SnapshotterConfig is used to configure the overlay snapshotter instance
 type SnapshotterConfig struct {
-	asyncRemove   bool
-	upperdirLabel bool
-	upperdirRoot  string
-	mountOptions  []string
+	asyncRemove     bool
+	upperdirLabel   bool
+	upperdirRoot    string
+	rootfsQuotaType string
+	mountOptions    []string
+	rootfsQuotaSize int
+	rootfsQuotaMap  map[string]quota.RootfsQuota
 }
 
 // Opt is an option to configure the overlay snapshotter
@@ -90,6 +96,34 @@ func WithUpperdirRoot(ro string) Opt {
 	}
 }
 
+func WithUpperdirQuotaType(quotaType string) Opt {
+	return func(config *SnapshotterConfig) error {
+		config.rootfsQuotaType = quotaType
+		return nil
+	}
+}
+
+func WithRootfsQuota(size int) Opt {
+	return func(config *SnapshotterConfig) error {
+		config.rootfsQuotaSize = size
+		return nil
+	}
+}
+
+func WithQuotas(rootfsQuotas map[string]quota.RootfsQuota) Opt {
+	return func(config *SnapshotterConfig) error {
+		config.rootfsQuotaMap = make(map[string]quota.RootfsQuota)
+		if rootfsQuotas == nil {
+			return nil
+		}
+
+		for n, sn := range rootfsQuotas {
+			config.rootfsQuotaMap[n] = sn
+		}
+		return nil
+	}
+}
+
 // WithMountOptions defines the default mount options used for the overlay mount.
 // NOTE: Options are not applied to bind mounts.
 func WithMountOptions(options []string) Opt {
@@ -100,13 +134,15 @@ func WithMountOptions(options []string) Opt {
 }
 
 type snapshotter struct {
-	root          string
-	upperdirRoot  string
-	rootfsQuota   int
-	ms            *storage.MetaStore
-	asyncRemove   bool
-	upperdirLabel bool
-	options       []string
+	root            string
+	upperdirRoot    string
+	rootfsQuotaType string
+	rootfsQuota     int
+	ms              *storage.MetaStore
+	asyncRemove     bool
+	upperdirLabel   bool
+	options         []string
+	rootfsQuotaMap  map[string]quota.RootfsQuota
 }
 
 // NewSnapshotter returns a Snapshotter which uses overlayfs. The overlayfs
@@ -154,13 +190,25 @@ func NewSnapshotter(root string, opts ...Opt) (snapshots.Snapshotter, error) {
 		config.mountOptions = append(config.mountOptions, "index=off")
 	}
 
+	isSupport, _, err := checkXFSQuota(root)
+	if err != nil {
+		return nil, err
+	}
+
+	if !isSupport {
+		delete(config.rootfsQuotaMap, "xfs")
+	}
+
 	return &snapshotter{
-		root:          root,
-		upperdirRoot:  config.upperdirRoot,
-		ms:            ms,
-		asyncRemove:   config.asyncRemove,
-		upperdirLabel: config.upperdirLabel,
-		options:       config.mountOptions,
+		root:            root,
+		upperdirRoot:    config.upperdirRoot,
+		rootfsQuota:     config.rootfsQuotaSize,
+		rootfsQuotaType: config.rootfsQuotaType,
+		ms:              ms,
+		asyncRemove:     config.asyncRemove,
+		upperdirLabel:   config.upperdirLabel,
+		options:         config.mountOptions,
+		rootfsQuotaMap:  config.rootfsQuotaMap,
 	}, nil
 }
 
@@ -507,11 +555,13 @@ func (o *snapshotter) createSnapshot(ctx context.Context, kind snapshots.Kind, k
 	}
 
 	//通用限额和共享存储限额,默认xfs文件系统
+	//upperdir限额，xfs/dpc
 	if val, found := s.Labels[notebookLabelKey]; found && val == notebookLabelValue {
+
 		if _, found := s.Labels[notebookNameLabelKey]; !found {
 			return nil, fmt.Errorf("failed to get jobID: %s", key)
 		}
-		//开机
+
 		if val, found := s.Labels[notebookActionKey]; found && val == notebookStartValue {
 			td = filepath.Join(o.upperdirRoot, s.Labels[notebookNameLabelKey])
 			isExist, err := o.dirExists(td)
@@ -522,6 +572,26 @@ func (o *snapshotter) createSnapshot(ctx context.Context, kind snapshots.Kind, k
 			if !isExist {
 				return nil, fmt.Errorf("no found upperdir: %s", td)
 			}
+			//开机,有可能需要设置系统盘大小（增配/dpc）
+			// if _, found := s.Labels[quotaLabelKey]; found {
+			// 	size, err := strconv.Atoi(s.Labels[quotaLabelKey])
+			// 	if err != nil {
+			// 		return nil, fmt.Errorf("size err: %s", s.Labels[quotaLabelKey])
+			// 	}
+
+			// 	//var quotaOpt []quota.Opt
+			// 	//quotaOpt = append(quotaOpt, )
+			// 	if _, found := o.rootfsQuotaMap[o.rootfsQuotaType]; found {
+			// 		quota, err := o.rootfsQuotaMap[o.rootfsQuotaType].CreateRootfsQuota(ctx)
+			// 		if err != nil {
+			// 			return nil, fmt.Errorf("failed to get rootfsquota: %s", err)
+			// 		}
+
+			// 		//quota.CreateRootfsQuota(ctx)
+			// 	} else {
+			// 		fmt.Printf("no found rootfsQuota %s backend", o.rootfsQuotaType)
+			// 	}
+			// }
 
 		}
 
@@ -569,6 +639,23 @@ func (o *snapshotter) createSnapshot(ctx context.Context, kind snapshots.Kind, k
 
 	return o.mounts(s), nil
 }
+
+// func (o *snapshotter) quota(size int) error {
+// 		//var quotaOpt []quota.Opt
+// 		//quotaOpt = append(quotaOpt, )
+// 		if _, found := o.rootfsQuotaMap[o.rootfsQuotaType]; found {
+// 			quota, err := o.rootfsQuotaMap[o.rootfsQuotaType].CreateRootfsQuota(ctx)
+// 			if err != nil {
+// 				return nil, fmt.Errorf("failed to get rootfsquota: %s", err)
+// 			}
+
+// 			//quota.CreateRootfsQuota(ctx)
+// 		} else {
+// 			fmt.Printf("no found rootfsQuota %s backend", o.rootfsQuotaType)
+// 		}
+
+// 	return nil
+// }
 
 func (o *snapshotter) dirExists(path string) (bool, error) {
 	info, err := os.Stat(path)
@@ -699,4 +786,26 @@ func supportsIndex() bool {
 	return false
 }
 
-func setQuota(id string) {}
+func checkXFSQuota(root string) (bool, string, error) {
+	cmd := fmt.Sprintf("findmnt -T %s -o TARGET,FSTYPE,OPTIONS -n", root)
+	out, err := overlayutils.ExecuteShell(cmd)
+	if err != nil {
+		return false, "", err
+	}
+
+	fields := strings.Fields(out)
+	if len(fields) < 3 {
+		return false, "", fmt.Errorf("unexpected findmnt output: %s", out)
+	}
+
+	target := fields[0]
+	fsType := fields[1]
+	options := fields[2]
+
+	if fsType != "xfs" {
+		return false, target, nil
+	}
+	isXFSQuota := strings.Contains(options, "prjquota")
+
+	return isXFSQuota, target, nil
+}
