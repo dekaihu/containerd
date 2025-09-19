@@ -7,6 +7,7 @@ import (
 
 	pb "github.com/containerd/containerd/api/services/disks/v1"
 	"github.com/containerd/containerd/integration/remote/util"
+	"github.com/gogo/protobuf/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"k8s.io/klog/v2"
@@ -53,6 +54,13 @@ func (c *DisksClient) Close() error {
 func (c *DisksClient) View(ctx context.Context, key string) (*pb.ViewDiskResponse, error) {
 	return c.client.View(ctx, &pb.ViewDiskRequest{
 		Key: key,
+	})
+}
+
+func (c *DisksClient) Save(ctx context.Context, key, version string) (*types.Empty, error) {
+	return c.client.Save(ctx, &pb.SaveDiskRequest{
+		Key:     key,
+		Version: version,
 	})
 }
 

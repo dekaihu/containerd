@@ -387,6 +387,10 @@ func (o *snapshotter) Remove(ctx context.Context, key string) (err error) {
 	if !o.asyncRemove {
 		//不删除upperdir
 		if val, found := info.Labels[notebookLabelKey]; !found || val != notebookLabelValue {
+			//迁移disk目录->shared
+			if _, err := o.diskClient.Save(ctx, info.Labels[notebookNameLabelKey], info.Labels[versionKey]); err != nil {
+				return fmt.Errorf("savedisk failed: %w", err)
+			}
 			var removals []string
 			removals, err = o.getCleanupDirectories(ctx, t)
 			if err != nil {
