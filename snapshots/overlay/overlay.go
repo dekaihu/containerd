@@ -45,7 +45,8 @@ const upperdirKey = "containerd.io/snapshot/overlay.upperdir"
 
 var (
 	notebookLabelKey     = "type.system.hero.ai"
-	versionKey           = "lastversions.system.hero.ai"
+	lastversionKey       = "lastversions.system.hero.ai"
+	versionKey           = "versions.system.hero.ai"
 	notebookLabelValue   = "notebook"
 	notebookActionKey    = "command.system.hero.ai"
 	notebookStartValue   = "start"
@@ -385,12 +386,7 @@ func (o *snapshotter) Remove(ctx context.Context, key string) (err error) {
 	}
 
 	if !o.asyncRemove {
-		//不删除upperdir
 		if val, found := info.Labels[notebookLabelKey]; !found || val != notebookLabelValue {
-			//迁移disk目录->shared
-			if _, err := o.diskClient.Save(ctx, info.Labels[notebookNameLabelKey], info.Labels[versionKey]); err != nil {
-				return fmt.Errorf("savedisk failed: %w", err)
-			}
 			var removals []string
 			removals, err = o.getCleanupDirectories(ctx, t)
 			if err != nil {
@@ -409,6 +405,14 @@ func (o *snapshotter) Remove(ctx context.Context, key string) (err error) {
 					}
 				}
 			}()
+		} else {
+			//迁移disk目录->shared
+			if _, err := o.diskClient.Save(ctx, info.Labels[notebookNameLabelKey], info.Labels[versionKey]); err != nil {
+				return fmt.Errorf("savedisk failed: %w", err)
+			}
+			//定时判断系统盘是否迁移结束
+			o.timeViewDisk(ctx, info.Labels[notebookNameLabelKey], info.Labels[versionKey], DefaultTimerView)
+			fmt.Printf("job %s save disk succeed", info.Labels[notebookNameLabelKey])
 		}
 
 	}
@@ -558,11 +562,12 @@ func (o *snapshotter) createSnapshot(ctx context.Context, kind snapshots.Kind, k
 		}
 		if val, found := s.Labels[notebookActionKey]; found && val == notebookStartValue {
 			doRename = false
-			//判断系统盘是否准备就绪
-			if _, found := s.Labels[versionKey]; !found {
+			if _, found := s.Labels[lastversionKey]; !found {
 				return nil, fmt.Errorf("failed to get found version: %s", key)
 			}
-			o.timeViewDisk(ctx, s.Labels[notebookNameLabelKey], s.Labels[versionKey], DefaultTimerView)
+
+			//判断系统盘是否准备就绪
+			o.timeViewDisk(ctx, s.Labels[notebookNameLabelKey], s.Labels[lastversionKey], DefaultTimerView)
 			td = filepath.Join(o.upperdirRoot, s.Labels[notebookNameLabelKey])
 			isExist, err := o.dirExists(td)
 			if err != nil {
@@ -655,7 +660,7 @@ func (o *snapshotter) timeViewDisk(ctx context.Context, key, version string, int
 				continue
 			}
 
-			fmt.Printf("job id %s disk info: %v\n", key, viewResp.Disk)
+			fmt.Printf("job id %s version: %s, disk info: %v\n", key, version, viewResp.Disk)
 			if viewResp.Disk.Status == "Completed" && viewResp.Disk.Version == version {
 				return nil
 			}

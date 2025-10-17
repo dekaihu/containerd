@@ -71,8 +71,9 @@ var xxx_messageInfo_SaveDiskRequest proto.InternalMessageInfo
 
 type PrepareDiskRequest struct {
 	Key                  string   `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
-	Size_                string   `protobuf:"bytes,2,opt,name=size,proto3" json:"size,omitempty"`
+	QuotaSize            string   `protobuf:"bytes,2,opt,name=quota_size,json=quotaSize,proto3" json:"quota_size,omitempty"`
 	StorageType          string   `protobuf:"bytes,3,opt,name=storage_type,json=storageType,proto3" json:"storage_type,omitempty"`
+	Version              string   `protobuf:"bytes,4,opt,name=version,proto3" json:"version,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -110,6 +111,88 @@ func (m *PrepareDiskRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_PrepareDiskRequest proto.InternalMessageInfo
 
+type DiskQuotaRequest struct {
+	Key                  string   `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	QuotaSize            string   `protobuf:"bytes,2,opt,name=quota_size,json=quotaSize,proto3" json:"quota_size,omitempty"`
+	StorageType          string   `protobuf:"bytes,3,opt,name=storage_type,json=storageType,proto3" json:"storage_type,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *DiskQuotaRequest) Reset()      { *m = DiskQuotaRequest{} }
+func (*DiskQuotaRequest) ProtoMessage() {}
+func (*DiskQuotaRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_45f3d618dbde71cc, []int{2}
+}
+func (m *DiskQuotaRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *DiskQuotaRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_DiskQuotaRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *DiskQuotaRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DiskQuotaRequest.Merge(m, src)
+}
+func (m *DiskQuotaRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *DiskQuotaRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_DiskQuotaRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DiskQuotaRequest proto.InternalMessageInfo
+
+type DiskQuotaResponse struct {
+	MountPoint           string   `protobuf:"bytes,1,opt,name=mount_point,json=mountPoint,proto3" json:"mount_point,omitempty"`
+	SizeBytes            int64    `protobuf:"varint,2,opt,name=size_bytes,json=sizeBytes,proto3" json:"size_bytes,omitempty"`
+	Disk                 *Disk    `protobuf:"bytes,3,opt,name=disk,proto3" json:"disk,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *DiskQuotaResponse) Reset()      { *m = DiskQuotaResponse{} }
+func (*DiskQuotaResponse) ProtoMessage() {}
+func (*DiskQuotaResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_45f3d618dbde71cc, []int{3}
+}
+func (m *DiskQuotaResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *DiskQuotaResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_DiskQuotaResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *DiskQuotaResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DiskQuotaResponse.Merge(m, src)
+}
+func (m *DiskQuotaResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *DiskQuotaResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_DiskQuotaResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DiskQuotaResponse proto.InternalMessageInfo
+
 type ViewDiskRequest struct {
 	Key                  string   `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -120,7 +203,7 @@ type ViewDiskRequest struct {
 func (m *ViewDiskRequest) Reset()      { *m = ViewDiskRequest{} }
 func (*ViewDiskRequest) ProtoMessage() {}
 func (*ViewDiskRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_45f3d618dbde71cc, []int{2}
+	return fileDescriptor_45f3d618dbde71cc, []int{4}
 }
 func (m *ViewDiskRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -159,7 +242,7 @@ type RemoveDiskRequest struct {
 func (m *RemoveDiskRequest) Reset()      { *m = RemoveDiskRequest{} }
 func (*RemoveDiskRequest) ProtoMessage() {}
 func (*RemoveDiskRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_45f3d618dbde71cc, []int{3}
+	return fileDescriptor_45f3d618dbde71cc, []int{5}
 }
 func (m *RemoveDiskRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -190,7 +273,7 @@ var xxx_messageInfo_RemoveDiskRequest proto.InternalMessageInfo
 
 type UpdateDiskRequest struct {
 	Key                  string   `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
-	Size_                string   `protobuf:"bytes,2,opt,name=size,proto3" json:"size,omitempty"`
+	QuotaSize            string   `protobuf:"bytes,2,opt,name=quota_size,json=quotaSize,proto3" json:"quota_size,omitempty"`
 	StorageType          string   `protobuf:"bytes,3,opt,name=storage_type,json=storageType,proto3" json:"storage_type,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -200,7 +283,7 @@ type UpdateDiskRequest struct {
 func (m *UpdateDiskRequest) Reset()      { *m = UpdateDiskRequest{} }
 func (*UpdateDiskRequest) ProtoMessage() {}
 func (*UpdateDiskRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_45f3d618dbde71cc, []int{4}
+	return fileDescriptor_45f3d618dbde71cc, []int{6}
 }
 func (m *UpdateDiskRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -240,7 +323,7 @@ type ListDiskRequest struct {
 func (m *ListDiskRequest) Reset()      { *m = ListDiskRequest{} }
 func (*ListDiskRequest) ProtoMessage() {}
 func (*ListDiskRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_45f3d618dbde71cc, []int{5}
+	return fileDescriptor_45f3d618dbde71cc, []int{7}
 }
 func (m *ListDiskRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -282,7 +365,7 @@ type Disk struct {
 func (m *Disk) Reset()      { *m = Disk{} }
 func (*Disk) ProtoMessage() {}
 func (*Disk) Descriptor() ([]byte, []int) {
-	return fileDescriptor_45f3d618dbde71cc, []int{6}
+	return fileDescriptor_45f3d618dbde71cc, []int{8}
 }
 func (m *Disk) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -323,7 +406,7 @@ type PrepareDiskResponse struct {
 func (m *PrepareDiskResponse) Reset()      { *m = PrepareDiskResponse{} }
 func (*PrepareDiskResponse) ProtoMessage() {}
 func (*PrepareDiskResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_45f3d618dbde71cc, []int{7}
+	return fileDescriptor_45f3d618dbde71cc, []int{9}
 }
 func (m *PrepareDiskResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -362,7 +445,7 @@ type ViewDiskResponse struct {
 func (m *ViewDiskResponse) Reset()      { *m = ViewDiskResponse{} }
 func (*ViewDiskResponse) ProtoMessage() {}
 func (*ViewDiskResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_45f3d618dbde71cc, []int{8}
+	return fileDescriptor_45f3d618dbde71cc, []int{10}
 }
 func (m *ViewDiskResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -402,7 +485,7 @@ type UpdateDiskResponse struct {
 func (m *UpdateDiskResponse) Reset()      { *m = UpdateDiskResponse{} }
 func (*UpdateDiskResponse) ProtoMessage() {}
 func (*UpdateDiskResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_45f3d618dbde71cc, []int{9}
+	return fileDescriptor_45f3d618dbde71cc, []int{11}
 }
 func (m *UpdateDiskResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -441,7 +524,7 @@ type ListDiskResponse struct {
 func (m *ListDiskResponse) Reset()      { *m = ListDiskResponse{} }
 func (*ListDiskResponse) ProtoMessage() {}
 func (*ListDiskResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_45f3d618dbde71cc, []int{10}
+	return fileDescriptor_45f3d618dbde71cc, []int{12}
 }
 func (m *ListDiskResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -481,7 +564,7 @@ type ListDiskItem struct {
 func (m *ListDiskItem) Reset()      { *m = ListDiskItem{} }
 func (*ListDiskItem) ProtoMessage() {}
 func (*ListDiskItem) Descriptor() ([]byte, []int) {
-	return fileDescriptor_45f3d618dbde71cc, []int{11}
+	return fileDescriptor_45f3d618dbde71cc, []int{13}
 }
 func (m *ListDiskItem) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -513,6 +596,8 @@ var xxx_messageInfo_ListDiskItem proto.InternalMessageInfo
 func init() {
 	proto.RegisterType((*SaveDiskRequest)(nil), "containerd.services.disks.v1.SaveDiskRequest")
 	proto.RegisterType((*PrepareDiskRequest)(nil), "containerd.services.disks.v1.PrepareDiskRequest")
+	proto.RegisterType((*DiskQuotaRequest)(nil), "containerd.services.disks.v1.DiskQuotaRequest")
+	proto.RegisterType((*DiskQuotaResponse)(nil), "containerd.services.disks.v1.DiskQuotaResponse")
 	proto.RegisterType((*ViewDiskRequest)(nil), "containerd.services.disks.v1.ViewDiskRequest")
 	proto.RegisterType((*RemoveDiskRequest)(nil), "containerd.services.disks.v1.RemoveDiskRequest")
 	proto.RegisterType((*UpdateDiskRequest)(nil), "containerd.services.disks.v1.UpdateDiskRequest")
@@ -528,48 +613,51 @@ func init() {
 func init() { proto.RegisterFile("services/disks/v1/disks.proto", fileDescriptor_45f3d618dbde71cc) }
 
 var fileDescriptor_45f3d618dbde71cc = []byte{
-	// 645 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x55, 0x51, 0x4f, 0x13, 0x41,
-	0x10, 0xe6, 0xe8, 0x51, 0xe8, 0x94, 0x04, 0x58, 0x0d, 0xa9, 0x45, 0x0a, 0x9e, 0x31, 0x21, 0x26,
-	0xde, 0x01, 0x26, 0xbe, 0xa8, 0x89, 0x12, 0x35, 0xd1, 0x68, 0x82, 0x05, 0x09, 0x31, 0x9a, 0xe6,
-	0x4a, 0x87, 0x73, 0x53, 0xee, 0xf6, 0xbc, 0xdd, 0xab, 0x96, 0x27, 0xff, 0x80, 0xff, 0x8b, 0x47,
-	0x1f, 0x7c, 0xf0, 0x51, 0xfa, 0x4b, 0xcc, 0xee, 0xed, 0xd9, 0xda, 0x93, 0x3b, 0x1a, 0xe3, 0xdb,
-	0xec, 0xdc, 0x7c, 0xdf, 0x37, 0xb3, 0x33, 0x37, 0x0b, 0xab, 0x1c, 0xa3, 0x1e, 0x3d, 0x42, 0xee,
-	0x74, 0x28, 0xef, 0x72, 0xa7, 0xb7, 0x95, 0x18, 0x76, 0x18, 0x31, 0xc1, 0xc8, 0xf5, 0x23, 0x16,
-	0x08, 0x97, 0x06, 0x18, 0x75, 0xec, 0x34, 0xd2, 0x4e, 0x02, 0x7a, 0x5b, 0xf5, 0x15, 0x8f, 0x31,
-	0xef, 0x04, 0x1d, 0x15, 0xdb, 0x8e, 0x8f, 0x1d, 0xf4, 0x43, 0xd1, 0x4f, 0xa0, 0xf5, 0x6b, 0xe3,
-	0x1f, 0xdd, 0x20, 0xfd, 0x74, 0xd5, 0x63, 0x1e, 0x53, 0xa6, 0x23, 0x2d, 0xed, 0x5d, 0x1b, 0x07,
-	0x08, 0xea, 0x23, 0x17, 0xae, 0x1f, 0x26, 0x01, 0xd6, 0x43, 0x58, 0xd8, 0x73, 0x7b, 0xf8, 0x84,
-	0xf2, 0x6e, 0x13, 0x3f, 0xc6, 0xc8, 0x05, 0x59, 0x84, 0x52, 0x17, 0xfb, 0x35, 0x63, 0xdd, 0xd8,
-	0xa8, 0x34, 0xa5, 0x49, 0x6a, 0x30, 0xdb, 0xc3, 0x88, 0x53, 0x16, 0xd4, 0xa6, 0x95, 0x37, 0x3d,
-	0x5a, 0xef, 0x81, 0xec, 0x46, 0x18, 0xba, 0x51, 0x01, 0x03, 0x01, 0x93, 0xd3, 0x53, 0xd4, 0x70,
-	0x65, 0x93, 0x1b, 0x30, 0xcf, 0x05, 0x8b, 0x5c, 0x0f, 0x5b, 0xa2, 0x1f, 0x62, 0xad, 0xa4, 0xbe,
-	0x55, 0xb5, 0x6f, 0xbf, 0x1f, 0xa2, 0x75, 0x13, 0x16, 0x0e, 0x28, 0x7e, 0xca, 0xe5, 0xb6, 0x6e,
-	0xc1, 0x52, 0x13, 0x7d, 0x56, 0x50, 0x84, 0xf5, 0x0e, 0x96, 0xde, 0x84, 0x1d, 0x57, 0xfc, 0x9f,
-	0x4c, 0x9f, 0xc1, 0xc2, 0x4b, 0xca, 0xc5, 0x28, 0xf7, 0x32, 0x94, 0x8f, 0xe9, 0x89, 0xc0, 0x48,
-	0xd3, 0xeb, 0x13, 0x59, 0x81, 0x4a, 0x28, 0xa9, 0x7e, 0xcb, 0xcc, 0x34, 0xe7, 0xa4, 0x63, 0x8f,
-	0x9e, 0xa2, 0xf5, 0x19, 0x4c, 0xc9, 0x21, 0x83, 0xe4, 0x48, 0x24, 0x7a, 0x09, 0x7e, 0x4e, 0x3a,
-	0xa4, 0xd8, 0xc5, 0xfd, 0x90, 0x9a, 0x5c, 0xb8, 0x22, 0xe6, 0x3a, 0x47, 0x7d, 0xca, 0x54, 0x60,
-	0x66, 0x2b, 0xf8, 0x6a, 0xc0, 0x95, 0x3f, 0x7a, 0xc9, 0x43, 0x16, 0x70, 0x24, 0x6b, 0x50, 0xf5,
-	0x59, 0x1c, 0x88, 0x56, 0xc8, 0x68, 0x20, 0x74, 0x2e, 0xa0, 0x5c, 0xbb, 0xd2, 0x43, 0x56, 0x01,
-	0x64, 0x29, 0xad, 0x76, 0x5f, 0x20, 0x57, 0x09, 0x95, 0x9a, 0x15, 0xe9, 0xd9, 0x91, 0x0e, 0x72,
-	0x0f, 0x4c, 0x99, 0xb8, 0x4a, 0xa8, 0xba, 0x6d, 0xd9, 0x79, 0xd3, 0x6f, 0x2b, 0x65, 0x15, 0x6f,
-	0xbd, 0x80, 0xc5, 0x61, 0xef, 0x75, 0x2e, 0x29, 0x97, 0x31, 0x21, 0x57, 0x17, 0xc8, 0x68, 0xef,
-	0xff, 0x8d, 0x4d, 0x16, 0x1c, 0x2b, 0xb6, 0x4e, 0xcb, 0x15, 0xba, 0x03, 0x15, 0xed, 0x79, 0x2c,
-	0xac, 0x7d, 0x58, 0x1c, 0x8e, 0x82, 0x96, 0x7a, 0x04, 0x33, 0x54, 0xa0, 0xcf, 0x6b, 0xc6, 0x7a,
-	0x69, 0xa3, 0xba, 0x7d, 0x3b, 0x5f, 0x2b, 0x85, 0x3f, 0x17, 0xe8, 0x37, 0x13, 0xa0, 0x75, 0x08,
-	0xf3, 0xa3, 0xee, 0xbf, 0x4c, 0x6e, 0x5a, 0xce, 0xf4, 0x64, 0xe5, 0x6c, 0x7f, 0x37, 0x61, 0x46,
-	0x1e, 0x39, 0x09, 0x60, 0x56, 0x4f, 0x00, 0xd9, 0xcc, 0x87, 0x67, 0x7f, 0xfa, 0xfa, 0xd6, 0x04,
-	0x08, 0x7d, 0x2b, 0x08, 0xa6, 0x6c, 0x31, 0xb9, 0x93, 0x0f, 0x1d, 0x5b, 0x01, 0x75, 0xfb, 0xb2,
-	0xe1, 0x5a, 0xe6, 0x35, 0x94, 0x93, 0x05, 0x41, 0x9c, 0x7c, 0x64, 0x66, 0x8d, 0xd4, 0x97, 0xed,
-	0x64, 0x81, 0xda, 0xe9, 0x02, 0xb5, 0x9f, 0xca, 0x75, 0x4c, 0xba, 0x50, 0x4e, 0x06, 0xaa, 0x88,
-	0x32, 0xb3, 0x72, 0xea, 0x9b, 0x97, 0x07, 0x0c, 0xaf, 0x49, 0xb6, 0xbe, 0xe8, 0x9a, 0xc6, 0xf6,
-	0x4f, 0xd1, 0x35, 0x65, 0x66, 0xf4, 0x15, 0x98, 0xf2, 0x29, 0x28, 0x92, 0x19, 0x7b, 0x2e, 0x2e,
-	0xba, 0xa2, 0x9d, 0x83, 0xb3, 0xf3, 0xc6, 0xd4, 0x8f, 0xf3, 0xc6, 0xd4, 0x97, 0x41, 0xc3, 0x38,
-	0x1b, 0x34, 0x8c, 0x6f, 0x83, 0x86, 0xf1, 0x73, 0xd0, 0x30, 0xde, 0x3e, 0xf0, 0xa8, 0xf8, 0x10,
-	0xb7, 0xed, 0x23, 0xe6, 0x3b, 0x43, 0xa9, 0x51, 0xd3, 0x0d, 0xa9, 0x93, 0x79, 0x44, 0xef, 0x2b,
-	0xe3, 0x70, 0xba, 0x5d, 0x56, 0x4a, 0x77, 0x7f, 0x05, 0x00, 0x00, 0xff, 0xff, 0x3a, 0xaa, 0x05,
-	0xd6, 0x68, 0x07, 0x00, 0x00,
+	// 697 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x56, 0x4f, 0x6f, 0xd3, 0x4e,
+	0x10, 0xad, 0x9b, 0x3f, 0x6d, 0x26, 0x95, 0x9a, 0xee, 0xef, 0xa7, 0x2a, 0xb8, 0x34, 0x2d, 0x46,
+	0x48, 0x15, 0x12, 0x76, 0x5b, 0x24, 0x2e, 0x80, 0x04, 0x15, 0x20, 0x81, 0x40, 0x6a, 0xd3, 0x52,
+	0x55, 0x5c, 0x22, 0xa7, 0x99, 0x9a, 0x55, 0x6a, 0xaf, 0xeb, 0x5d, 0x07, 0xd2, 0x13, 0xe2, 0x8a,
+	0xf8, 0x52, 0x9c, 0x7a, 0xe4, 0xc8, 0x91, 0xe6, 0x93, 0xa0, 0xb5, 0xd7, 0x8d, 0x1b, 0x43, 0xdc,
+	0x08, 0x55, 0xdc, 0x66, 0x9f, 0x67, 0xe6, 0xcd, 0xce, 0xbe, 0xcc, 0x04, 0x96, 0x39, 0x06, 0x3d,
+	0x7a, 0x88, 0xdc, 0xea, 0x50, 0xde, 0xe5, 0x56, 0x6f, 0x23, 0x36, 0x4c, 0x3f, 0x60, 0x82, 0x91,
+	0x9b, 0x87, 0xcc, 0x13, 0x36, 0xf5, 0x30, 0xe8, 0x98, 0x89, 0xa7, 0x19, 0x3b, 0xf4, 0x36, 0xf4,
+	0x25, 0x87, 0x31, 0xe7, 0x18, 0xad, 0xc8, 0xb7, 0x1d, 0x1e, 0x59, 0xe8, 0xfa, 0xa2, 0x1f, 0x87,
+	0xea, 0x37, 0x46, 0x3f, 0xda, 0x5e, 0xf2, 0xe9, 0x7f, 0x87, 0x39, 0x2c, 0x32, 0x2d, 0x69, 0x29,
+	0x74, 0x65, 0x34, 0x40, 0x50, 0x17, 0xb9, 0xb0, 0x5d, 0x3f, 0x76, 0x30, 0x1e, 0xc3, 0xfc, 0xae,
+	0xdd, 0xc3, 0x67, 0x94, 0x77, 0x9b, 0x78, 0x12, 0x22, 0x17, 0xa4, 0x06, 0x85, 0x2e, 0xf6, 0xeb,
+	0xda, 0xaa, 0xb6, 0x56, 0x69, 0x4a, 0x93, 0xd4, 0x61, 0xa6, 0x87, 0x01, 0xa7, 0xcc, 0xab, 0x4f,
+	0x47, 0x68, 0x72, 0x34, 0x3e, 0x6b, 0x40, 0xb6, 0x03, 0xf4, 0xed, 0x20, 0x27, 0xc5, 0x32, 0xc0,
+	0x49, 0xc8, 0x84, 0xdd, 0xe2, 0xf4, 0x14, 0x55, 0x96, 0x4a, 0x84, 0xec, 0xd2, 0x53, 0x24, 0xb7,
+	0x60, 0x8e, 0x0b, 0x16, 0xd8, 0x0e, 0xb6, 0x44, 0xdf, 0xc7, 0x7a, 0x21, 0x72, 0xa8, 0x2a, 0x6c,
+	0xaf, 0xef, 0x63, 0xba, 0x88, 0xe2, 0xe5, 0x22, 0x8e, 0xa0, 0x26, 0xc9, 0x77, 0x64, 0xb6, 0x6b,
+	0xac, 0xc0, 0xf8, 0xa2, 0xc1, 0x42, 0x8a, 0x88, 0xfb, 0xcc, 0xe3, 0x48, 0x56, 0xa0, 0xea, 0xb2,
+	0xd0, 0x13, 0x2d, 0x9f, 0x51, 0x4f, 0x28, 0x46, 0x88, 0xa0, 0x6d, 0x89, 0x48, 0x62, 0x49, 0xd9,
+	0x6a, 0xf7, 0x05, 0xf2, 0x88, 0xb8, 0xd0, 0xac, 0x48, 0x64, 0x4b, 0x02, 0xe4, 0x01, 0x14, 0xe5,
+	0xe3, 0x47, 0x84, 0xd5, 0x4d, 0xc3, 0x1c, 0xa7, 0x0e, 0x33, 0x6a, 0x72, 0xe4, 0x6f, 0xdc, 0x86,
+	0xf9, 0x7d, 0x8a, 0x1f, 0xc6, 0xb6, 0xdd, 0xb8, 0x03, 0x0b, 0x4d, 0x74, 0x59, 0xce, 0x03, 0x1b,
+	0x0e, 0x2c, 0xbc, 0xf5, 0x3b, 0xb6, 0xb8, 0xee, 0x47, 0x34, 0x5e, 0xc0, 0xfc, 0x6b, 0xca, 0x45,
+	0x9a, 0x66, 0x11, 0xca, 0x47, 0xf4, 0x58, 0x60, 0xa0, 0x98, 0xd4, 0x89, 0x2c, 0x41, 0xc5, 0x97,
+	0xa9, 0x2e, 0xb8, 0x4a, 0xcd, 0x59, 0x09, 0x48, 0x2a, 0xe3, 0x23, 0x14, 0x65, 0x0e, 0xe9, 0x24,
+	0x9b, 0x11, 0xf3, 0xc5, 0xf1, 0xb3, 0x12, 0x18, 0x55, 0xcc, 0x65, 0xd9, 0x4a, 0x4e, 0x2e, 0x6c,
+	0x11, 0x72, 0x55, 0xa3, 0x3a, 0x65, 0x6e, 0x50, 0xcc, 0xde, 0xe0, 0xab, 0x06, 0xff, 0x5d, 0x52,
+	0xfc, 0x3f, 0x96, 0xc1, 0x2b, 0xa8, 0x0d, 0x65, 0xa0, 0x6a, 0x49, 0x72, 0x69, 0x13, 0xe6, 0xea,
+	0x02, 0x49, 0xcb, 0xe0, 0xef, 0xb2, 0xc9, 0x0b, 0x87, 0x51, 0xb6, 0x4e, 0xcb, 0x16, 0x89, 0x5a,
+	0x14, 0xf2, 0x54, 0x18, 0x7b, 0x50, 0x1b, 0x4a, 0x41, 0x51, 0x3d, 0x81, 0x12, 0x15, 0xe8, 0xf2,
+	0xba, 0xb6, 0x5a, 0x58, 0xab, 0x6e, 0xde, 0x1d, 0xcf, 0x95, 0x84, 0xbf, 0x14, 0xe8, 0x36, 0xe3,
+	0x40, 0xe3, 0x00, 0xe6, 0xd2, 0xf0, 0x6f, 0x44, 0x9c, 0x5c, 0x67, 0x7a, 0xb2, 0xeb, 0x6c, 0x7e,
+	0x2b, 0x41, 0x49, 0x1e, 0x39, 0xf1, 0x60, 0x46, 0x29, 0x80, 0xac, 0x8f, 0x0f, 0xcf, 0x8e, 0x46,
+	0x7d, 0x63, 0x82, 0x08, 0xd5, 0x95, 0x63, 0xa8, 0x5c, 0x8c, 0x1d, 0x62, 0xe6, 0x17, 0x9c, 0x1e,
+	0x84, 0xba, 0x75, 0x65, 0x7f, 0xc5, 0x86, 0x50, 0x94, 0x82, 0x22, 0xf7, 0xc6, 0x07, 0x8e, 0xcc,
+	0x1e, 0xdd, 0xbc, 0xaa, 0xbb, 0xa2, 0xd9, 0x81, 0x72, 0x3c, 0x99, 0x48, 0x4e, 0x85, 0x99, 0xf9,
+	0xa5, 0x2f, 0x9a, 0xf1, 0x56, 0x33, 0x93, 0xad, 0x66, 0x3e, 0x97, 0x3b, 0x92, 0x74, 0xa1, 0x1c,
+	0xcb, 0x37, 0x2f, 0x65, 0x66, 0xd6, 0xe9, 0xeb, 0x57, 0x0f, 0x18, 0xb6, 0x49, 0x0a, 0x2d, 0xaf,
+	0x4d, 0x23, 0xd3, 0x2e, 0xaf, 0x4d, 0x99, 0x5f, 0xc4, 0x1b, 0x28, 0xca, 0xfd, 0x9c, 0x47, 0x33,
+	0xb2, 0xc3, 0xff, 0xd4, 0xa2, 0xad, 0xfd, 0xb3, 0xf3, 0xc6, 0xd4, 0x8f, 0xf3, 0xc6, 0xd4, 0xa7,
+	0x41, 0x43, 0x3b, 0x1b, 0x34, 0xb4, 0xef, 0x83, 0x86, 0xf6, 0x73, 0xd0, 0xd0, 0xde, 0x3d, 0x72,
+	0xa8, 0x78, 0x1f, 0xb6, 0xcd, 0x43, 0xe6, 0x5a, 0x43, 0xaa, 0xb4, 0x69, 0xfb, 0xd4, 0xca, 0xfc,
+	0xb3, 0x79, 0x18, 0x19, 0x07, 0xd3, 0xed, 0x72, 0xc4, 0x74, 0xff, 0x57, 0x00, 0x00, 0x00, 0xff,
+	0xff, 0x75, 0xec, 0xd3, 0x34, 0xfd, 0x08, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -585,6 +673,7 @@ const _ = grpc.SupportPackageIsVersion4
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type DisksClient interface {
 	Prepare(ctx context.Context, in *PrepareDiskRequest, opts ...grpc.CallOption) (*PrepareDiskResponse, error)
+	DiskQuota(ctx context.Context, in *DiskQuotaRequest, opts ...grpc.CallOption) (*DiskQuotaResponse, error)
 	View(ctx context.Context, in *ViewDiskRequest, opts ...grpc.CallOption) (*ViewDiskResponse, error)
 	Remove(ctx context.Context, in *RemoveDiskRequest, opts ...grpc.CallOption) (*types.Empty, error)
 	Update(ctx context.Context, in *UpdateDiskRequest, opts ...grpc.CallOption) (*UpdateDiskResponse, error)
@@ -603,6 +692,15 @@ func NewDisksClient(cc *grpc.ClientConn) DisksClient {
 func (c *disksClient) Prepare(ctx context.Context, in *PrepareDiskRequest, opts ...grpc.CallOption) (*PrepareDiskResponse, error) {
 	out := new(PrepareDiskResponse)
 	err := c.cc.Invoke(ctx, "/containerd.services.disks.v1.Disks/Prepare", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *disksClient) DiskQuota(ctx context.Context, in *DiskQuotaRequest, opts ...grpc.CallOption) (*DiskQuotaResponse, error) {
+	out := new(DiskQuotaResponse)
+	err := c.cc.Invoke(ctx, "/containerd.services.disks.v1.Disks/DiskQuota", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -657,6 +755,7 @@ func (c *disksClient) Save(ctx context.Context, in *SaveDiskRequest, opts ...grp
 // DisksServer is the server API for Disks service.
 type DisksServer interface {
 	Prepare(context.Context, *PrepareDiskRequest) (*PrepareDiskResponse, error)
+	DiskQuota(context.Context, *DiskQuotaRequest) (*DiskQuotaResponse, error)
 	View(context.Context, *ViewDiskRequest) (*ViewDiskResponse, error)
 	Remove(context.Context, *RemoveDiskRequest) (*types.Empty, error)
 	Update(context.Context, *UpdateDiskRequest) (*UpdateDiskResponse, error)
@@ -670,6 +769,9 @@ type UnimplementedDisksServer struct {
 
 func (*UnimplementedDisksServer) Prepare(ctx context.Context, req *PrepareDiskRequest) (*PrepareDiskResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Prepare not implemented")
+}
+func (*UnimplementedDisksServer) DiskQuota(ctx context.Context, req *DiskQuotaRequest) (*DiskQuotaResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DiskQuota not implemented")
 }
 func (*UnimplementedDisksServer) View(ctx context.Context, req *ViewDiskRequest) (*ViewDiskResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method View not implemented")
@@ -705,6 +807,24 @@ func _Disks_Prepare_Handler(srv interface{}, ctx context.Context, dec func(inter
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DisksServer).Prepare(ctx, req.(*PrepareDiskRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Disks_DiskQuota_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DiskQuotaRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DisksServer).DiskQuota(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/containerd.services.disks.v1.Disks/DiskQuota",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DisksServer).DiskQuota(ctx, req.(*DiskQuotaRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -808,6 +928,10 @@ var _Disks_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Disks_Prepare_Handler,
 		},
 		{
+			MethodName: "DiskQuota",
+			Handler:    _Disks_DiskQuota_Handler,
+		},
+		{
 			MethodName: "View",
 			Handler:    _Disks_View_Handler,
 		},
@@ -897,6 +1021,13 @@ func (m *PrepareDiskRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i -= len(m.XXX_unrecognized)
 		copy(dAtA[i:], m.XXX_unrecognized)
 	}
+	if len(m.Version) > 0 {
+		i -= len(m.Version)
+		copy(dAtA[i:], m.Version)
+		i = encodeVarintDisks(dAtA, i, uint64(len(m.Version)))
+		i--
+		dAtA[i] = 0x22
+	}
 	if len(m.StorageType) > 0 {
 		i -= len(m.StorageType)
 		copy(dAtA[i:], m.StorageType)
@@ -904,10 +1035,10 @@ func (m *PrepareDiskRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x1a
 	}
-	if len(m.Size_) > 0 {
-		i -= len(m.Size_)
-		copy(dAtA[i:], m.Size_)
-		i = encodeVarintDisks(dAtA, i, uint64(len(m.Size_)))
+	if len(m.QuotaSize) > 0 {
+		i -= len(m.QuotaSize)
+		copy(dAtA[i:], m.QuotaSize)
+		i = encodeVarintDisks(dAtA, i, uint64(len(m.QuotaSize)))
 		i--
 		dAtA[i] = 0x12
 	}
@@ -915,6 +1046,105 @@ func (m *PrepareDiskRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i -= len(m.Key)
 		copy(dAtA[i:], m.Key)
 		i = encodeVarintDisks(dAtA, i, uint64(len(m.Key)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *DiskQuotaRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DiskQuotaRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *DiskQuotaRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if len(m.StorageType) > 0 {
+		i -= len(m.StorageType)
+		copy(dAtA[i:], m.StorageType)
+		i = encodeVarintDisks(dAtA, i, uint64(len(m.StorageType)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.QuotaSize) > 0 {
+		i -= len(m.QuotaSize)
+		copy(dAtA[i:], m.QuotaSize)
+		i = encodeVarintDisks(dAtA, i, uint64(len(m.QuotaSize)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Key) > 0 {
+		i -= len(m.Key)
+		copy(dAtA[i:], m.Key)
+		i = encodeVarintDisks(dAtA, i, uint64(len(m.Key)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *DiskQuotaResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DiskQuotaResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *DiskQuotaResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if m.Disk != nil {
+		{
+			size, err := m.Disk.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintDisks(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x1a
+	}
+	if m.SizeBytes != 0 {
+		i = encodeVarintDisks(dAtA, i, uint64(m.SizeBytes))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.MountPoint) > 0 {
+		i -= len(m.MountPoint)
+		copy(dAtA[i:], m.MountPoint)
+		i = encodeVarintDisks(dAtA, i, uint64(len(m.MountPoint)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -1020,10 +1250,10 @@ func (m *UpdateDiskRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x1a
 	}
-	if len(m.Size_) > 0 {
-		i -= len(m.Size_)
-		copy(dAtA[i:], m.Size_)
-		i = encodeVarintDisks(dAtA, i, uint64(len(m.Size_)))
+	if len(m.QuotaSize) > 0 {
+		i -= len(m.QuotaSize)
+		copy(dAtA[i:], m.QuotaSize)
+		i = encodeVarintDisks(dAtA, i, uint64(len(m.QuotaSize)))
 		i--
 		dAtA[i] = 0x12
 	}
@@ -1395,12 +1625,63 @@ func (m *PrepareDiskRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovDisks(uint64(l))
 	}
-	l = len(m.Size_)
+	l = len(m.QuotaSize)
 	if l > 0 {
 		n += 1 + l + sovDisks(uint64(l))
 	}
 	l = len(m.StorageType)
 	if l > 0 {
+		n += 1 + l + sovDisks(uint64(l))
+	}
+	l = len(m.Version)
+	if l > 0 {
+		n += 1 + l + sovDisks(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *DiskQuotaRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Key)
+	if l > 0 {
+		n += 1 + l + sovDisks(uint64(l))
+	}
+	l = len(m.QuotaSize)
+	if l > 0 {
+		n += 1 + l + sovDisks(uint64(l))
+	}
+	l = len(m.StorageType)
+	if l > 0 {
+		n += 1 + l + sovDisks(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *DiskQuotaResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.MountPoint)
+	if l > 0 {
+		n += 1 + l + sovDisks(uint64(l))
+	}
+	if m.SizeBytes != 0 {
+		n += 1 + sovDisks(uint64(m.SizeBytes))
+	}
+	if m.Disk != nil {
+		l = m.Disk.Size()
 		n += 1 + l + sovDisks(uint64(l))
 	}
 	if m.XXX_unrecognized != nil {
@@ -1451,7 +1732,7 @@ func (m *UpdateDiskRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovDisks(uint64(l))
 	}
-	l = len(m.Size_)
+	l = len(m.QuotaSize)
 	if l > 0 {
 		n += 1 + l + sovDisks(uint64(l))
 	}
@@ -1633,8 +1914,35 @@ func (this *PrepareDiskRequest) String() string {
 	}
 	s := strings.Join([]string{`&PrepareDiskRequest{`,
 		`Key:` + fmt.Sprintf("%v", this.Key) + `,`,
-		`Size_:` + fmt.Sprintf("%v", this.Size_) + `,`,
+		`QuotaSize:` + fmt.Sprintf("%v", this.QuotaSize) + `,`,
 		`StorageType:` + fmt.Sprintf("%v", this.StorageType) + `,`,
+		`Version:` + fmt.Sprintf("%v", this.Version) + `,`,
+		`XXX_unrecognized:` + fmt.Sprintf("%v", this.XXX_unrecognized) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *DiskQuotaRequest) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&DiskQuotaRequest{`,
+		`Key:` + fmt.Sprintf("%v", this.Key) + `,`,
+		`QuotaSize:` + fmt.Sprintf("%v", this.QuotaSize) + `,`,
+		`StorageType:` + fmt.Sprintf("%v", this.StorageType) + `,`,
+		`XXX_unrecognized:` + fmt.Sprintf("%v", this.XXX_unrecognized) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *DiskQuotaResponse) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&DiskQuotaResponse{`,
+		`MountPoint:` + fmt.Sprintf("%v", this.MountPoint) + `,`,
+		`SizeBytes:` + fmt.Sprintf("%v", this.SizeBytes) + `,`,
+		`Disk:` + strings.Replace(this.Disk.String(), "Disk", "Disk", 1) + `,`,
 		`XXX_unrecognized:` + fmt.Sprintf("%v", this.XXX_unrecognized) + `,`,
 		`}`,
 	}, "")
@@ -1668,7 +1976,7 @@ func (this *UpdateDiskRequest) String() string {
 	}
 	s := strings.Join([]string{`&UpdateDiskRequest{`,
 		`Key:` + fmt.Sprintf("%v", this.Key) + `,`,
-		`Size_:` + fmt.Sprintf("%v", this.Size_) + `,`,
+		`QuotaSize:` + fmt.Sprintf("%v", this.QuotaSize) + `,`,
 		`StorageType:` + fmt.Sprintf("%v", this.StorageType) + `,`,
 		`XXX_unrecognized:` + fmt.Sprintf("%v", this.XXX_unrecognized) + `,`,
 		`}`,
@@ -1951,7 +2259,7 @@ func (m *PrepareDiskRequest) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Size_", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field QuotaSize", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1979,7 +2287,7 @@ func (m *PrepareDiskRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Size_ = string(dAtA[iNdEx:postIndex])
+			m.QuotaSize = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
@@ -2012,6 +2320,323 @@ func (m *PrepareDiskRequest) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.StorageType = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Version", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDisks
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthDisks
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthDisks
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Version = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipDisks(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthDisks
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DiskQuotaRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowDisks
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DiskQuotaRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DiskQuotaRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDisks
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthDisks
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthDisks
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Key = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field QuotaSize", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDisks
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthDisks
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthDisks
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.QuotaSize = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StorageType", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDisks
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthDisks
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthDisks
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.StorageType = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipDisks(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthDisks
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DiskQuotaResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowDisks
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DiskQuotaResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DiskQuotaResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MountPoint", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDisks
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthDisks
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthDisks
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MountPoint = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SizeBytes", wireType)
+			}
+			m.SizeBytes = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDisks
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SizeBytes |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Disk", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDisks
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthDisks
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthDisks
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Disk == nil {
+				m.Disk = &Disk{}
+			}
+			if err := m.Disk.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -2264,7 +2889,7 @@ func (m *UpdateDiskRequest) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Size_", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field QuotaSize", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -2292,7 +2917,7 @@ func (m *UpdateDiskRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Size_ = string(dAtA[iNdEx:postIndex])
+			m.QuotaSize = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {

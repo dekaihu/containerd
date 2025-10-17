@@ -64,6 +64,13 @@ func (c *DisksClient) Save(ctx context.Context, key, version string) (*types.Emp
 	})
 }
 
+func (c *DisksClient) DiskQuota(ctx context.Context, key, size string) (*pb.DiskQuotaResponse, error) {
+	return c.client.DiskQuota(ctx, &pb.DiskQuotaRequest{
+		Key:     key,
+		QuotaSize: size,
+	})
+}
+
 func (c *DisksClient) List(ctx context.Context, filter string, pageSize int32) (*pb.ListDiskResponse, error) {
 	return c.client.List(ctx, &pb.ListDiskRequest{
 		Filter:   filter,
